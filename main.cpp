@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 
 std::vector<cv::Point> getROIVertices(const cv::Mat& img)
@@ -36,6 +37,47 @@ cv::Mat regionOfInterest(const cv::Mat& img, const std::vector<cv::Point>& verti
     return masked_image;
 }
 
+cv::Mat getLineSegments(cv::Mat& img)
+{
+    cv::Mat linedImg;
+    cv::HoughLinesP(
+        img,
+        linedImg,
+        6,
+        M_PI/60,
+        160,
+        40.0,
+        25.0
+    );
+
+    if(linedImg.empty()) {
+        std::cerr << "Could not get line segments via Hough Transform\n";
+    }
+    return linedImg;
+}
+
+cv::Mat drawLines(cv::Mat img, cv::Mat lines, cv::Scalar color = cv::Scalar(0, 0, 255), int thickness =6) {
+    cv::Mat line_img = cv::Mat::zeros(img.size(), CV_8UC3);
+
+    if (lines.empty())
+        return img;
+
+    lines = lines.reshape(1, lines.rows / 4);
+
+    for (int i = 0; i < lines.rows; ++i) {
+        int x1 = lines.at<int>(i, 0);
+        int y1 = lines.at<int>(i, 1);
+        int x2 = lines.at<int>(i, 2);
+        int y2 = lines.at<int>(i, 3);
+
+        cv::line(line_img, cv::Point(x1, y1), cv::Point(x2, y2), color, thickness);
+    }
+
+    cv::addWeighted(img, 0.8, line_img, 4.0, 0.0, img);
+
+    return img;
+}
+
 int main(int argc, char** argv)
 {
     // Read image 
@@ -50,9 +92,14 @@ int main(int argc, char** argv)
 
     // Get region of interest 
     auto ROIvertices = getROIVertices(img);
-    const auto croppedImage = regionOfInterest(imgCanny, ROIvertices);
+    auto croppedImage = regionOfInterest(imgCanny, ROIvertices);
 
-    cv::imshow(" Outline lanes ", croppedImage);
+    //get line segments via Hough Transform 
+    auto linedImg = getLineSegments(croppedImage);
+
+    auto lineDrawn = drawLines(img, linedImg, cv::Scalar(255, 0, 0));
+
+    cv::imshow(" Outline lanes ", lineDrawn);
     auto key = cv::waitKey(0);
 }
 
