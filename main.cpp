@@ -56,33 +56,26 @@ cv::Mat getLineSegments(cv::Mat& img)
     return linedImg;
 }
 
-cv::Mat drawLines(cv::Mat& img, cv::Mat& linedImg, const cv::Scalar color, int thickness = 3)
-{
-    if(img.empty()) {
-        std::cerr << " Empty lined image!\n";
-        return cv::Mat{};
-    } 
-    if(img.empty()) {
-        std::cerr << "Empty base image!\n";
-        return cv::Mat{};
-    }
+cv::Mat drawLines(cv::Mat img, cv::Mat lines, cv::Scalar color = cv::Scalar(0, 0, 255), int thickness =6) {
+    cv::Mat line_img = cv::Mat::zeros(img.size(), CV_8UC3);
 
-    cv::Mat line_img(img.rows, img.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+    if (lines.empty())
+        return img;
 
-    // Loop over all lines and draw them on the blank image
-    for (int i = 0; i < linedImg.rows; ++i) {
-        cv::Vec4i line = linedImg.at<cv::Vec4i>(i);
-        int x1 = line[0];
-        int y1 = line[1];
-        int x2 = line[2];
-        int y2 = line[3];
+    lines = lines.reshape(1, lines.rows / 4);
+
+    for (int i = 0; i < lines.rows; ++i) {
+        int x1 = lines.at<int>(i, 0);
+        int y1 = lines.at<int>(i, 1);
+        int x2 = lines.at<int>(i, 2);
+        int y2 = lines.at<int>(i, 3);
+
         cv::line(line_img, cv::Point(x1, y1), cv::Point(x2, y2), color, thickness);
     }
 
-    // Merge the image with the lines onto the original.
-    cv::Mat lineDrawn;
-    cv::addWeighted(img, 0.8, line_img, 1.0, 0.0, lineDrawn);
-    return lineDrawn;
+    cv::addWeighted(img, 0.8, line_img, 4.0, 0.0, img);
+
+    return img;
 }
 
 int main(int argc, char** argv)
@@ -103,6 +96,7 @@ int main(int argc, char** argv)
 
     //get line segments via Hough Transform 
     auto linedImg = getLineSegments(croppedImage);
+
     auto lineDrawn = drawLines(img, linedImg, cv::Scalar(255, 0, 0));
 
     cv::imshow(" Outline lanes ", lineDrawn);
