@@ -12,6 +12,7 @@ enum resource
 
 std::string getResourcePath(std::string path, resource type)
 {
+    std::cout << "getting resource path" << std::endl;
     switch (type)
     {
         case IMAGE:
