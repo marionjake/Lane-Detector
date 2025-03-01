@@ -80,7 +80,7 @@ cv::Mat drawLines(cv::Mat img, cv::Mat lines, cv::Scalar color = cv::Scalar(0, 0
 
 int main(int argc, char** argv)
 {
-    std::cout << "Starting Lane Detector App....." << std::endl;
+    std::cout << "Starting Lane Detector App...." << std::endl;
 
     // Read image 
     std::string laneImgPath{getResourcePath("driving-lane.jpg", IMAGE)};
